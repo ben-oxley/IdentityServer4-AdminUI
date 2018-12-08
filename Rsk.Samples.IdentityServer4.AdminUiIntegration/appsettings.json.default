@@ -1,0 +1,6 @@
+﻿{
+  "DbProvider": "MySql",
+  "IdentityConnectionString": "Server=,3306;Uid=;Pwd=;Database=;SslMode=Preferred;",
+  "IdentityServerConnectionString": "Server=,3306;Uid=;Pwd=;Database=;SslMode=Preferred;",
+  "Certificate_Location": "C:\\[Location]\\public_privatekey.pfx"
+}

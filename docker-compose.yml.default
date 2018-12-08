@@ -1,0 +1,48 @@
+version: "3"
+services:
+  ids:
+    image: ids-edf
+    ports:
+      - "5003:5003"
+    build:
+      context: .
+      dockerfile: Rsk.Samples.IdentityServer4.AdminUiIntegration/Dockerfile
+    volumes:
+      - C:\Users\Ben\AppData\Roaming\IDS:/keys
+    environment:
+      - DbProvider=MySql
+      - IdentityConnectionString=Server=,3306;Uid=;Pwd=;Database=;SslMode=Preferred;
+      - IdentityServerConnectionString=Server=,3306;Uid=;Pwd=;Database=;SslMode=Preferred;
+      - Certificate_Location=/keys/public_privatekey.pfx
+  ui:
+    image: identityserverregistry.azurecr.io/idxui
+    ports: 
+      - "5000:5000"
+    environment:
+      - UiUrl=http://localhost:5000
+      - ApiUrl=http://localhost:5001
+      - AuthorityUrl=http://ids:5003
+  client:
+    image: identityserverregistry.azurecr.io/idsclient
+    ports:
+      - "5002:5002"
+    environment:
+      - AuthorityUrl=http://ids:5003
+  api:
+    image: identityserverregistry.azurecr.io/idxapi
+    ports:
+      - "5001:5001"
+    entrypoint: /app/MySqlStart.sh ids-edf.mysql.database.azure.com
+    environment:
+      - DbProvider=MySql
+      - IdentityConnectionString=Server=,3306;Uid=;Pwd=;Database=;SslMode=Preferred;
+      - IdentityServerConnectionString=Server=,3306;Uid=;Pwd=;Database=;SslMode=Preferred;
+      - UiUrl=http://localhost:5000
+      - ClientUrl=http://localhost:5002
+      - AuthorityUrl=http://ids:5003
+      - RequireHttpsMetadata=false
+      - RunIdentityServerMigrations=true
+      - LoggingProvider=Docker
+      - LoggingMinimumLevel=Info
+      - LoggingOutputTemplate=[{Timestamp:dd-MM-yyyy HH:mm:ss} {Level}] {Message}{NewLine}{Exception}
+      - LicenseKey=SFRUUDovL0lEUzo1MDAzfDN8MTB8MDEvMDEvMjAyN3xsTElyS0VONnJ5dFlmZ25FaTNIdEtPMTVvRmFpcEFnV1ZLdVJYZ1NsVFd4NFZDSytVOVhGaWJkSjhPN0E3OXREZmRXLzFrZHdNam1uQWcra3pYNzhuMjh4bzhNNEo4R291ME93MENGRDhvQnlUZFd5Vi9XR3VGNnJGSTUrTnErL0h0RG10YnRhbVY5eXpQTE9mWTdPYmZxZWJQcVVQSFNrS3ppRU9MbUcrSjBsdUlIc1BGQzNndkF1M3pPcFNTSVFOUndCVllOdGdzaERSTTJMZFk1N3h0WXUvUFRISjYrSEsxVGVTV004UXlpMmRqWlFEMDcvRnJyZzJyQzg5VDI3Wk8yU3lGYVBYMnQycEhBQXRLNXRodzAzMzBrN04vL3MvSnlGUGJNWTFuTXEvcjZtc01XeTJhUU04SlhRZk1DS2ljaEYrMk5sVVMzZGpIOUkxS2U5RnhhY3JEUWQ0MUJ1a0x0VWxjN1BjYUc3ZkV0OVJ0bVFUUWZIaUtwNGJpSmlxbThkV1BqZDFzYlFHNzdWbnhYM1VBMk8wU3dRK29TKzRxdTNibUVMMGxqQzc5U2ZjSC9UWFo4OHo0WFlHTDROWjJ4SEFPbVJLV3p6NEFyOVl2cGFPY015eGhnZVBCbVNxWm85R0FKTU0xelovdGQ3SHluSUJ0bVpzaVVNem5TdmZGMjV3WUlQcWw4bGNjK211dXpyOVd1RC9xKzFwZjZvZXUxSUQ4NEsyVkwzZXU3dGx3Mms5eUxnZ0RJbVZvME9UMzM5bWdUOTFBYVNoaGNUZCt4eFNGekFCK3RMNFlZV2hVREsvTTkvWDhrRmZFMlE2M3haWkZiT2RXV2hRYnB1eGF3RnFsR1RHRWV5RGg1c2I3QnlMOWo5V3BJSGpTcU1jaDM0aCt6K21FYz0=
