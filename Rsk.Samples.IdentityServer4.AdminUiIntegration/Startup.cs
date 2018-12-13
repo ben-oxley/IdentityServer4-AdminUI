@@ -42,9 +42,10 @@ namespace Rsk.Samples.IdentityServer4.AdminUiIntegration
                     identityServerBuilder = x => x.UseSqlServer(identityServerConnectionString, options => options.MigrationsAssembly(migrationAssembly));
                     break;
                 case "MySql":
-                    identityBuilder = x => x.UseMySql(identityConnectionString, options => {
+                    identityBuilder = x => x.UseMySql(identityConnectionString, options =>
+                    {
                         options.MigrationsAssembly(migrationAssembly);
-                        });
+                    });
                     identityServerBuilder = x => x.UseMySql(identityServerConnectionString, options => options.MigrationsAssembly(migrationAssembly));
                     break;
                 case "PostgreSql":
@@ -69,9 +70,27 @@ namespace Rsk.Samples.IdentityServer4.AdminUiIntegration
                 {
                     AutoSaveChanges = true
                 });
+            IIdentityServerBuilder idservBuilder = null;
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(Configuration.GetValue<string>("Public_Origin"))){
+                    idservBuilder = services.AddIdentityServer(options =>
+                    {
+                        options.PublicOrigin = Configuration.GetValue<string>("Public_Origin");
+                        options.IssuerUri = Configuration.GetValue<string>("Public_Origin");
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                idservBuilder = services.AddIdentityServer();
+            }
 
+            if (idservBuilder == null)
+            {
+                idservBuilder = services.AddIdentityServer();
+            }
 
-            IIdentityServerBuilder idservBuilder = services.AddIdentityServer();
 
             try
             {
@@ -84,14 +103,15 @@ namespace Rsk.Samples.IdentityServer4.AdminUiIntegration
                 throw new Exception("Could not load certificate. Please choose a valid file location for an X509 public/private keypair certificate (.pfx) and set as the environment variable \"Certificate_Location\"");
             }
 
+
             idservBuilder
                 .AddOperationalStore(options => options.ConfigureDbContext = identityServerBuilder)
-                .AddConfigurationStore(options => options.ConfigureDbContext = identityServerBuilder)
-                .AddAspNetIdentity<IdentityExpressUser>(); // ASP.NET Core Identity Integration
+                            .AddConfigurationStore(options => options.ConfigureDbContext = identityServerBuilder)
+                            .AddAspNetIdentity<IdentityExpressUser>(); // ASP.NET Core Identity Integration
 
             services.AddMvc();
 
-            
+
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -100,10 +120,10 @@ namespace Rsk.Samples.IdentityServer4.AdminUiIntegration
 
             if (env.IsDevelopment())
             {
-                
+
                 app.UseDeveloperExceptionPage();
             }
-            
+
 
             app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 

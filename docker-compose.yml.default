@@ -14,6 +14,7 @@ services:
       - IdentityConnectionString=Server=,3306;Uid=;Pwd=;Database=;SslMode=Preferred;
       - IdentityServerConnectionString=Server=,3306;Uid=;Pwd=;Database=;SslMode=Preferred;
       - Certificate_Location=/keys/public_privatekey.pfx
+	  - Public_Origin=
   ui:
     image: identityserverregistry.azurecr.io/idxui
     ports: 
