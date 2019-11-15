@@ -165,6 +165,12 @@ namespace IdentityServer4.Quickstart.UI
             return vm;
         }
 
+        public ChangePasswordViewModel BuildChangePasswordViewModel()
+        {
+            var vm = new ChangePasswordViewModel();
+            return vm;
+        }
+
         public RegisterViewModel BuildRegisterViewModel(RegisterInputModel model, bool success)
         {
             RegisterViewModel newModel = new RegisterViewModel
@@ -173,6 +179,37 @@ namespace IdentityServer4.Quickstart.UI
                 Username = model.Username,
                 Password = model.Password,
                 ConfirmPassword = model.ConfirmPassword
+            };
+            return newModel;
+        }
+
+        public ChangePasswordViewModel BuildChangePasswordViewModel(ChangePasswordInputModel model, bool success)
+        {
+            ChangePasswordViewModel newModel = new ChangePasswordViewModel
+            {
+                IsSuccess = success,
+                OldPassword = model.OldPassword,
+                Password = model.Password,
+                ConfirmPassword = model.ConfirmPassword
+            };
+            return newModel;
+        }
+
+        public ResetPasswordViewModel BuildResetPasswordViewModel()
+        {
+            var vm = new ResetPasswordViewModel();
+            return vm;
+        }
+
+        public ResetPasswordViewModel BuildResetPasswordViewModel(ResetPasswordInputModel model, bool success)
+        {
+            ResetPasswordViewModel newModel = new ResetPasswordViewModel
+            {
+                IsSuccess = success,
+                Password = model.Password,
+                ConfirmPassword = model.ConfirmPassword,
+                Email = model.Email,
+                Token = model.Token,
             };
             return newModel;
         }

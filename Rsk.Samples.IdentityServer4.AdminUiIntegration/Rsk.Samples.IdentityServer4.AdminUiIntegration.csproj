@@ -13,6 +13,7 @@
   <ItemGroup>
     <PackageReference Include="IdentityExpress.Identity" Version="2.0.0-beta2" />
     <PackageReference Include="IdentityServer4" Version="2.0.3" />
+    <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="2.7.0" />
     <PackageReference Include="IdentityServer4.AspNetIdentity" Version="2.0.0" /> 
     <PackageReference Include="IdentityServer4.EntityFramework" Version="2.1.0" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.0.0" />

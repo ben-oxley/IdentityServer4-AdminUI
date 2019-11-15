@@ -22,6 +22,11 @@ using IdentityServer4.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Rsk.Samples.IdentityServer4.AdminUiIntegration.Quickstart.Account;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
+using System.Net;
+using System.Net.Mail;
+using System.Web;
 
 namespace IdentityServer4.Quickstart.UI
 {
@@ -38,6 +43,7 @@ namespace IdentityServer4.Quickstart.UI
         private readonly IEventService _events;
         private readonly AccountService _account;
         private readonly IUrlHelperFactory _urlHelperFactory;
+        private readonly IConfiguration _configuration;
 
         public AccountController(
             IIdentityServerInteractionService interaction,
@@ -45,13 +51,17 @@ namespace IdentityServer4.Quickstart.UI
             IHttpContextAccessor httpContextAccessor,
             UserManager<IdentityExpressUser> userManager,
             IAuthenticationSchemeProvider schemeProvider,
-            IEventService events, IUrlHelperFactory urlHelperFactory)
+            IEventService events, 
+            IUrlHelperFactory urlHelperFactory,
+            IConfiguration configuration
+            )
         {
             _interaction = interaction;
             _events = events;
             _urlHelperFactory = urlHelperFactory;
             _account = new AccountService(interaction, httpContextAccessor, schemeProvider, clientStore);
             _userManager = userManager;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -320,6 +330,133 @@ namespace IdentityServer4.Quickstart.UI
             }
 
             vm = _account.BuildRegisterViewModel(model, result.Succeeded);
+
+            return View(vm);
+        }
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            var vm = _account.BuildChangePasswordViewModel();
+            return View(vm);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordInputModel model)
+        {
+            var vm = _account.BuildChangePasswordViewModel(model, false);
+            if (!ModelState.IsValid)
+            {
+                return View(vm);
+            }
+
+            IdentityExpressUser identityExpressUser = await _userManager.GetUserAsync(User);
+
+            var result = await _userManager.ChangePasswordAsync(identityExpressUser, model.OldPassword, model.Password);
+
+            if (result.Succeeded)
+            {
+                result = await _userManager.UpdateAsync(identityExpressUser);
+            }
+
+            if (!result.Succeeded)
+            {
+                foreach (var item in result.Errors)
+                {
+                    ModelState.AddModelError("", item.Description);
+                }
+
+            }
+
+            vm = _account.BuildChangePasswordViewModel(model, result.Succeeded);
+
+            return View(vm);
+        }
+
+        [Authorize("webhook")]
+        [HttpPost]
+        public async Task<IActionResult> PasswordReset([FromBody]PasswordResetDTO dto)
+        {
+            IdentityExpressUser identityExpressUser = await _userManager.FindByEmailAsync(dto.email);
+            string resetToken = await _userManager.GeneratePasswordResetTokenAsync(identityExpressUser);
+        
+            string emailHost = _configuration.GetValue<string>("smtp_host");
+            string emailPort = _configuration.GetValue<string>("smtp_port");
+            string smtpUsername = _configuration.GetValue<string>("smtp_username");
+            string smtpPassword = _configuration.GetValue<string>("smtp_password");
+            int port = 587;
+            int.TryParse(emailPort, out port);
+            string senderEmail = _configuration.GetValue<string>("Email_Host");
+            string senderName = _configuration.GetValue<string>("Sender_Name");
+            MailMessage message = new MailMessage();
+            message.IsBodyHtml = true;
+            message.From = new MailAddress(senderEmail, senderName);
+            message.To.Add(new MailAddress(dto.email));
+            message.Subject = "Password reset";
+            string urlEncodedEmail = HttpUtility.UrlEncode(identityExpressUser.Email);
+            string urlEncodedToken = HttpUtility.UrlEncode(resetToken);
+            message.Body = "<h1>IdentityServer Password Reset</h1>" +
+                "<p>Plese reset you password using the following link:</p>" +
+                "<p><a href='" +"/AccountController/PasswordReset?user="+urlEncodedEmail+"token="+resetToken+ "'>resetToken</a></p>";
+
+            using (var client = new SmtpClient(emailHost, port))
+            {
+
+                client.Credentials = new NetworkCredential(smtpUsername, smtpPassword);
+                client.EnableSsl = true;
+                client.Send(message);
+            }
+            return Ok();
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> PasswordReset(string email, string token)
+        {
+            IdentityExpressUser identityExpressUser = await _userManager.FindByEmailAsync(email);
+            
+            bool verified = await _userManager.VerifyUserTokenAsync(identityExpressUser, TokenOptions.DefaultEmailProvider, "ResetPassword", token);
+
+            if (verified)
+            {
+                ResetPasswordViewModel resetPasswordViewModel = _account.BuildResetPasswordViewModel();
+                resetPasswordViewModel.Email = email;
+                resetPasswordViewModel.Token = token;
+                return View(resetPasswordViewModel);
+            }
+            return Unauthorized();
+        }
+
+        
+        [HttpPost]
+        public async Task<IActionResult> PasswordReset([FromForm] ResetPasswordInputModel model)
+        {
+            var vm = _account.BuildResetPasswordViewModel(model, false);
+            if (!ModelState.IsValid)
+            {
+                return View(vm);
+            }
+
+            IdentityExpressUser identityExpressUser = await _userManager.GetUserAsync(User);
+
+            var result = await _userManager.ResetPasswordAsync(identityExpressUser, model.Token, model.Password);
+
+            if (result.Succeeded)
+            {
+                result = await _userManager.UpdateAsync(identityExpressUser);
+            }
+
+            if (!result.Succeeded)
+            {
+                foreach (var item in result.Errors)
+                {
+                    ModelState.AddModelError("", item.Description);
+                }
+
+            }
+
+            vm = _account.BuildResetPasswordViewModel(model, result.Succeeded);
 
             return View(vm);
         }

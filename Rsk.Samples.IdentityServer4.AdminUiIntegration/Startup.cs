@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Rsk.Samples.IdentityServer4.AdminUiIntegration
 {
@@ -110,7 +111,14 @@ namespace Rsk.Samples.IdentityServer4.AdminUiIntegration
                             .AddAspNetIdentity<IdentityExpressUser>(); // ASP.NET Core Identity Integration
 
             services.AddMvc();
-
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("webhook", builder =>
+                {
+                    builder.AddAuthenticationSchemes("Bearer");
+                    builder.RequireScope("admin_ui_webhooks");
+                });
+            });
 
         }
 
