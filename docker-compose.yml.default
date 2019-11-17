@@ -65,3 +65,4 @@ services:
       - PasswordResetEndpoint=http://ids:5003/account/passwordreset
       - ClientId=webhook
       - ClientSecret=
+      - RegistrationConfirmationEndpoint=http://ids:5003/account/passwordreset
