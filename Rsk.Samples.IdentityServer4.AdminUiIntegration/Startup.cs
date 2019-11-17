@@ -74,7 +74,8 @@ namespace Rsk.Samples.IdentityServer4.AdminUiIntegration
             IIdentityServerBuilder idservBuilder = null;
             try
             {
-                if (!string.IsNullOrWhiteSpace(Configuration.GetValue<string>("Public_Origin"))){
+                if (!string.IsNullOrWhiteSpace(Configuration.GetValue<string>("Public_Origin")))
+                {
                     idservBuilder = services.AddIdentityServer(options =>
                     {
                         options.PublicOrigin = Configuration.GetValue<string>("Public_Origin");
@@ -96,12 +97,15 @@ namespace Rsk.Samples.IdentityServer4.AdminUiIntegration
             try
             {
                 string certlocation = Configuration.GetValue<string>("Certificate_Location");
-                X509Certificate2 cert = new X509Certificate2(certlocation);
+                string certPassword = Configuration.GetValue<string>("Certificate_Password");
+
+                X509Certificate2 cert = String.IsNullOrWhiteSpace(certPassword) ? new X509Certificate2(certlocation) : new X509Certificate2(certlocation, certPassword);
+
                 idservBuilder = idservBuilder.AddSigningCredential(cert);
             }
             catch (Exception e)
             {
-                throw new Exception("Could not load certificate. Please choose a valid file location for an X509 public/private keypair certificate (.pfx) and set as the environment variable \"Certificate_Location\"");
+                throw new Exception("Error: Could not load certificate. Please choose a valid file location for an X509 public/private keypair certificate (.pfx) and set as the environment variable \"Certificate_Location\""+e.Message,e);
             }
 
 

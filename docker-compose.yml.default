@@ -1,5 +1,11 @@
 version: "3"
 services:
+  db:
+    image: identityserverregistry.azurecr.io/idxdbmysql 
+    ports: 
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=Welkom1234!
   ids:
     image: ids-edf
     ports:
@@ -11,33 +17,39 @@ services:
       - C:\Users\Ben\AppData\Roaming\IDS:/keys
     environment:
       - DbProvider=MySql
-      - IdentityConnectionString=Server=,3306;Uid=;Pwd=;Database=;SslMode=Preferred;
-      - IdentityServerConnectionString=Server=,3306;Uid=;Pwd=;Database=;SslMode=Preferred;
+      - IdentityConnectionString=Server=db;Uid=docker;Pwd=Welkom1234!;Database=IdentityExpressDb;
+      - IdentityServerConnectionString=Server=db;Uid=docker;Pwd=Welkom1234!;Database=IdentityExpressDb;
       - Certificate_Location=/keys/public_privatekey.pfx
-	  - Public_Origin=
+      - Certificate_Password=
+      - smtp_host=smtp.gmail.com
+      - smtp_port=587
+      - smtp_username=
+      - smtp_password=
+      - Email_Host=
+      - Sender_Name="AdminUI"
+      - Public_Origin=ids
   ui:
-    image: identityserverregistry.azurecr.io/idxui
+    image: identityserverregistry.azurecr.io/idxui:2.5.0
     ports: 
       - "5000:5000"
     environment:
       - UiUrl=http://localhost:5000
       - ApiUrl=http://localhost:5001
       - AuthorityUrl=http://ids:5003
-  client:
-    image: identityserverregistry.azurecr.io/idsclient
-    ports:
-      - "5002:5002"
-    environment:
-      - AuthorityUrl=http://ids:5003
+      - AddUserPassword=true
   api:
-    image: identityserverregistry.azurecr.io/idxapi
+    image: identityserverregistry.azurecr.io/idxapi:2.5.0
     ports:
       - "5001:5001"
-    entrypoint: /app/MySqlStart.sh ids-edf.mysql.database.azure.com
+    depends_on: 
+      - "db"
+    links:
+      - "db"
+    entrypoint: /app/MySqlStart.sh db
     environment:
       - DbProvider=MySql
-      - IdentityConnectionString=Server=,3306;Uid=;Pwd=;Database=;SslMode=Preferred;
-      - IdentityServerConnectionString=Server=,3306;Uid=;Pwd=;Database=;SslMode=Preferred;
+      - IdentityConnectionString=Server=db;Uid=docker;Pwd=Welkom1234!;Database=IdentityExpressDb;
+      - IdentityServerConnectionString=Server=db;Uid=docker;Pwd=Welkom1234!;Database=IdentityExpressDb;
       - UiUrl=http://localhost:5000
       - ClientUrl=http://localhost:5002
       - AuthorityUrl=http://ids:5003
@@ -46,4 +58,4 @@ services:
       - LoggingProvider=Docker
       - LoggingMinimumLevel=Info
       - LoggingOutputTemplate=[{Timestamp:dd-MM-yyyy HH:mm:ss} {Level}] {Message}{NewLine}{Exception}
-      - LicenseKey=SFRUUDovL0lEUzo1MDAzfDN8MTB8MDEvMDEvMjAyN3xsTElyS0VONnJ5dFlmZ25FaTNIdEtPMTVvRmFpcEFnV1ZLdVJYZ1NsVFd4NFZDSytVOVhGaWJkSjhPN0E3OXREZmRXLzFrZHdNam1uQWcra3pYNzhuMjh4bzhNNEo4R291ME93MENGRDhvQnlUZFd5Vi9XR3VGNnJGSTUrTnErL0h0RG10YnRhbVY5eXpQTE9mWTdPYmZxZWJQcVVQSFNrS3ppRU9MbUcrSjBsdUlIc1BGQzNndkF1M3pPcFNTSVFOUndCVllOdGdzaERSTTJMZFk1N3h0WXUvUFRISjYrSEsxVGVTV004UXlpMmRqWlFEMDcvRnJyZzJyQzg5VDI3Wk8yU3lGYVBYMnQycEhBQXRLNXRodzAzMzBrN04vL3MvSnlGUGJNWTFuTXEvcjZtc01XeTJhUU04SlhRZk1DS2ljaEYrMk5sVVMzZGpIOUkxS2U5RnhhY3JEUWQ0MUJ1a0x0VWxjN1BjYUc3ZkV0OVJ0bVFUUWZIaUtwNGJpSmlxbThkV1BqZDFzYlFHNzdWbnhYM1VBMk8wU3dRK29TKzRxdTNibUVMMGxqQzc5U2ZjSC9UWFo4OHo0WFlHTDROWjJ4SEFPbVJLV3p6NEFyOVl2cGFPY015eGhnZVBCbVNxWm85R0FKTU0xelovdGQ3SHluSUJ0bVpzaVVNem5TdmZGMjV3WUlQcWw4bGNjK211dXpyOVd1RC9xKzFwZjZvZXUxSUQ4NEsyVkwzZXU3dGx3Mms5eUxnZ0RJbVZvME9UMzM5bWdUOTFBYVNoaGNUZCt4eFNGekFCK3RMNFlZV2hVREsvTTkvWDhrRmZFMlE2M3haWkZiT2RXV2hRYnB1eGF3RnFsR1RHRWV5RGg1c2I3QnlMOWo5V3BJSGpTcU1jaDM0aCt6K21FYz0=
+      - LicenseKey=eyJTb2xkRm9yIjowLjAsIktleVByZXNldCI6NSwiU2F2ZUtleSI6dHJ1ZSwiTGVnYWN5S2V5IjpmYWxzZSwiRW1haWwiOiJzYWxlc0Byb2Nrc29saWRrbm93bGVkZ2UuY29tIiwiYXV0aCI6IkhUVFA6Ly9JRFM6NTAwMyIsImNsaWVudHMiOjMsInVzZXJzIjoxMCwiZXhwIjoiMjAyNC0wMi0xNVQwMDowMDowMCIsImlhdCI6IjIwMTktMDEtMTVUMTQ6MTA6NDUuMDAwMDIzM1oiLCJvcmciOiJEb2NrZXIgRGVtbyIsImF1ZCI6MSwidHlwZSI6Mn0=.np85S2T/P4GWIkwItIAFkS7fod7fnaOf9kFk0jsWcBKwUeGx1+x+bK7Rz3YCu7JlJlnLzRsMT7pSiHAGNYtE2fa9MvQnCPW4kYOIZD/ONP05ySTGxSWF6b/G50MofAfoTDNCjtt+NM/SeHYM77NTt8juel2a4rEoG0TxA8KmvbUBNlF7ehA/Uox3tXGcHWKp/WWsBPQuwxNtRPkY1VG1O6RVnXfaZTjQloBgie/RLWKSU5wOIBwV2sVQB2arEskms0KjCYXTFsme+yfMtc3dhxwFN2RsK33gOg5Hf7L3CCwHkyO3iyxE/AZWe65iULm7kglMwE/UCTBskgYXC1xkD2AlwuJ3mJ8Nc1cEzTGEEJFYEF+U3xfjPVGbwCvXjeirUnpDK8o4MjbQ+IsPt+sJjEH9uJXWA+NenMpShw43YCqogY4s5LB7Jxwn+DwjKSmJwRW7PBxOMLk/EZUthVwg3zssgPEvWut2gXeWwDeMR4nat7wEYBWuBNEDNVlKqJEGRnS6uo7FYV5PHQmoUkiEIfPOslZK0ROBpjWaNXGuE3yXM2bNHU94lpGqVIqY0I/zqvpcEcaaP2aJLwS7Ly7XzS8GPdH6pFqWkdcVvlRnnEcJvnEF7ZPd05UKRLkagfZJd7sdez536ULq4uB8TsiCPu1SyPha5ls9mtW/7hOp8to=
