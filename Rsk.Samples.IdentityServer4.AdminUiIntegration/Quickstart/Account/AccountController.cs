@@ -414,6 +414,7 @@ namespace IdentityServer4.Quickstart.UI
         [HttpGet]
         public async Task<IActionResult> PasswordReset(string email, string token)
         {
+            if (String.IsNullOrWhiteSpace(email)||String.IsNullOrWhiteSpace(token)) return Unauthorized();
             IdentityExpressUser identityExpressUser = await _userManager.FindByEmailAsync(email);
             
             bool verified = await _userManager.VerifyUserTokenAsync(identityExpressUser, TokenOptions.DefaultEmailProvider, "ResetPassword", token);

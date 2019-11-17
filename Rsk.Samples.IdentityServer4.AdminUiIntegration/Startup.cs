@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
+using IdentityServer4.EntityFramework.DbContexts;
 
 namespace Rsk.Samples.IdentityServer4.AdminUiIntegration
 {
@@ -105,7 +106,7 @@ namespace Rsk.Samples.IdentityServer4.AdminUiIntegration
             }
             catch (Exception e)
             {
-                throw new Exception("Error: Could not load certificate. Please choose a valid file location for an X509 public/private keypair certificate (.pfx) and set as the environment variable \"Certificate_Location\""+e.Message,e);
+                throw new Exception("Error: Could not load certificate. Please choose a valid file location for an X509 public/private keypair certificate (.pfx) and set as the environment variable \"Certificate_Location\"" + e.Message, e);
             }
 
 
@@ -115,6 +116,16 @@ namespace Rsk.Samples.IdentityServer4.AdminUiIntegration
                             .AddAspNetIdentity<IdentityExpressUser>(); // ASP.NET Core Identity Integration
 
             services.AddMvc();
+
+            services.AddAuthentication("Bearer")
+            .AddIdentityServerAuthentication(options =>
+            {
+                options.Authority = "http://ids:5003";
+                options.RequireHttpsMetadata = false;
+                options.ApiName = "admin_ui_webhooks";
+            });
+
+            //https://www.identityserver.com/articles/extending-adminui-with-newuser-and-passwordreset-webhooks
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("webhook", builder =>
@@ -126,23 +137,25 @@ namespace Rsk.Samples.IdentityServer4.AdminUiIntegration
 
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            loggerFactory.AddConsole(LogLevel.Debug);
+            using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
             if (env.IsDevelopment())
             {
-
                 app.UseDeveloperExceptionPage();
             }
 
-
-            app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
-
-            app.UseAuthentication();
-            app.UseIdentityServer();
             app.UseStaticFiles();
-            app.UseMvcWithDefaultRoute();
+            app.UseRouting();
+
+            app.UseIdentityServer();
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapDefaultControllerRoute();
+            });
         }
     }
 }
