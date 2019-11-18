@@ -7,6 +7,6 @@ namespace Rsk.Samples.IdentityServer4.AdminUiIntegration.Quickstart.Account
 {
     public class PasswordResetDTO
     {
-        public string email;
+        public string Email { get; set; }
     }
 }

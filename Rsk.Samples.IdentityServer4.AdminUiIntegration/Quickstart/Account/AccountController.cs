@@ -377,15 +377,17 @@ namespace IdentityServer4.Quickstart.UI
 
         [Authorize("webhook")]
         [HttpPost]
-        public async Task<IActionResult> PasswordReset([FromBody]PasswordResetDTO dto)
+        public async Task<IActionResult> PasswordResetHook([FromBody]PasswordResetDTO dto)
         {
-            IdentityExpressUser identityExpressUser = await _userManager.FindByEmailAsync(dto.email);
+            if (!ModelState.IsValid) return BadRequest("Invalid email"+ModelState.ToString());
+            IdentityExpressUser identityExpressUser = await _userManager.FindByEmailAsync(dto.Email);
             string resetToken = await _userManager.GeneratePasswordResetTokenAsync(identityExpressUser);
         
             string emailHost = _configuration.GetValue<string>("smtp_host");
             string emailPort = _configuration.GetValue<string>("smtp_port");
             string smtpUsername = _configuration.GetValue<string>("smtp_username");
             string smtpPassword = _configuration.GetValue<string>("smtp_password");
+            string origin = _configuration.GetValue<string>("Public_Origin");
             int port = 587;
             int.TryParse(emailPort, out port);
             string senderEmail = _configuration.GetValue<string>("Email_Host");
@@ -393,13 +395,13 @@ namespace IdentityServer4.Quickstart.UI
             MailMessage message = new MailMessage();
             message.IsBodyHtml = true;
             message.From = new MailAddress(senderEmail, senderName);
-            message.To.Add(new MailAddress(dto.email));
+            message.To.Add(new MailAddress(dto.Email));
             message.Subject = "Password reset";
             string urlEncodedEmail = HttpUtility.UrlEncode(identityExpressUser.Email);
             string urlEncodedToken = HttpUtility.UrlEncode(resetToken);
             message.Body = "<h1>IdentityServer Password Reset</h1>" +
                 "<p>Plese reset you password using the following link:</p>" +
-                "<p><a href='" +"/AccountController/PasswordReset?user="+urlEncodedEmail+"token="+resetToken+ "'>resetToken</a></p>";
+                "<p><a href='" +origin+"/Account/PasswordReset?email="+urlEncodedEmail+"&token="+ urlEncodedToken + "'>resetToken</a></p>";
 
             using (var client = new SmtpClient(emailHost, port))
             {
@@ -414,7 +416,7 @@ namespace IdentityServer4.Quickstart.UI
         [HttpGet]
         public async Task<IActionResult> PasswordReset(string email, string token)
         {
-            if (String.IsNullOrWhiteSpace(email)||String.IsNullOrWhiteSpace(token)) return Unauthorized();
+            if (String.IsNullOrWhiteSpace(email)||String.IsNullOrWhiteSpace(token)) return Unauthorized("Email or token not provided Email:" + email??"not provided"+"Token:"+token??"not provided");
             IdentityExpressUser identityExpressUser = await _userManager.FindByEmailAsync(email);
             
             bool verified = await _userManager.VerifyUserTokenAsync(identityExpressUser, TokenOptions.DefaultEmailProvider, "ResetPassword", token);
@@ -426,7 +428,7 @@ namespace IdentityServer4.Quickstart.UI
                 resetPasswordViewModel.Token = token;
                 return View(resetPasswordViewModel);
             }
-            return Unauthorized();
+            return Unauthorized("Token not validated Email:"+email+" token:"+token);
         }
 
         

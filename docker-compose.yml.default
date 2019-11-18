@@ -29,7 +29,7 @@ services:
       - Sender_Name="AdminUI"
       - Public_Origin=http://ids:5003
   ui:
-    image: identityserverregistry.azurecr.io/idxui:2.5.0
+    image: identityserverregistry.azurecr.io/idxui:2.5.1
     ports: 
       - "5000:5000"
     environment:
@@ -37,11 +37,13 @@ services:
       - ApiUrl=http://localhost:5001
       - AuthorityUrl=http://ids:5003
       - AddUserPassword=true
-      - PasswordResetEndpoint=http://ids:5003/account/passwordreset
+      - RequireHttpsMetadata=false
+      - PasswordResetEndpoint=http://ids:5003/account/PasswordResetHook
       - ClientId=webhook
       - ClientSecret=
+      - RegistrationConfirmationEndpoint=http://ids:5003/account/PasswordResetHook
   api:
-    image: identityserverregistry.azurecr.io/idxapi:2.5.0
+    image: identityserverregistry.azurecr.io/idxapi:2.5.1
     ports:
       - "5001:5001"
     depends_on: 
@@ -62,7 +64,7 @@ services:
       - LoggingMinimumLevel=Info
       - LoggingOutputTemplate=[{Timestamp:dd-MM-yyyy HH:mm:ss} {Level}] {Message}{NewLine}{Exception}
       - LicenseKey=eyJTb2xkRm9yIjowLjAsIktleVByZXNldCI6NSwiU2F2ZUtleSI6dHJ1ZSwiTGVnYWN5S2V5IjpmYWxzZSwiRW1haWwiOiJzYWxlc0Byb2Nrc29saWRrbm93bGVkZ2UuY29tIiwiYXV0aCI6IkhUVFA6Ly9JRFM6NTAwMyIsImNsaWVudHMiOjMsInVzZXJzIjoxMCwiZXhwIjoiMjAyNC0wMi0xNVQwMDowMDowMCIsImlhdCI6IjIwMTktMDEtMTVUMTQ6MTA6NDUuMDAwMDIzM1oiLCJvcmciOiJEb2NrZXIgRGVtbyIsImF1ZCI6MSwidHlwZSI6Mn0=.np85S2T/P4GWIkwItIAFkS7fod7fnaOf9kFk0jsWcBKwUeGx1+x+bK7Rz3YCu7JlJlnLzRsMT7pSiHAGNYtE2fa9MvQnCPW4kYOIZD/ONP05ySTGxSWF6b/G50MofAfoTDNCjtt+NM/SeHYM77NTt8juel2a4rEoG0TxA8KmvbUBNlF7ehA/Uox3tXGcHWKp/WWsBPQuwxNtRPkY1VG1O6RVnXfaZTjQloBgie/RLWKSU5wOIBwV2sVQB2arEskms0KjCYXTFsme+yfMtc3dhxwFN2RsK33gOg5Hf7L3CCwHkyO3iyxE/AZWe65iULm7kglMwE/UCTBskgYXC1xkD2AlwuJ3mJ8Nc1cEzTGEEJFYEF+U3xfjPVGbwCvXjeirUnpDK8o4MjbQ+IsPt+sJjEH9uJXWA+NenMpShw43YCqogY4s5LB7Jxwn+DwjKSmJwRW7PBxOMLk/EZUthVwg3zssgPEvWut2gXeWwDeMR4nat7wEYBWuBNEDNVlKqJEGRnS6uo7FYV5PHQmoUkiEIfPOslZK0ROBpjWaNXGuE3yXM2bNHU94lpGqVIqY0I/zqvpcEcaaP2aJLwS7Ly7XzS8GPdH6pFqWkdcVvlRnnEcJvnEF7ZPd05UKRLkagfZJd7sdez536ULq4uB8TsiCPu1SyPha5ls9mtW/7hOp8to=
-      - PasswordResetEndpoint=http://ids:5003/account/passwordreset
+      - PasswordResetEndpoint=http://ids:5003/account/PasswordResetHook
       - ClientId=webhook
       - ClientSecret=
-      - RegistrationConfirmationEndpoint=http://ids:5003/account/passwordreset
+      - RegistrationConfirmationEndpoint=http://ids:5003/account/PasswordResetHook
