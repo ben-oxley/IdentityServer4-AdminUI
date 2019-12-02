@@ -375,7 +375,7 @@ namespace IdentityServer4.Quickstart.UI
             return View(vm);
         }
 
-        [Authorize("webhook")]
+        //[Authorize("webhook")]
         [HttpPost]
         public async Task<IActionResult> PasswordResetHook([FromBody]PasswordResetDTO dto)
         {
@@ -402,7 +402,8 @@ namespace IdentityServer4.Quickstart.UI
             message.Body = "<h1>IdentityServer Password Reset</h1>" +
                 "<p>Plese reset you password using the following link:</p>" +
                 "<p><a href='" +origin+"/Account/PasswordReset?email="+urlEncodedEmail+"&token="+ urlEncodedToken + "'>resetToken</a></p>";
-
+            Console.WriteLine(resetToken);
+            Console.WriteLine(urlEncodedToken);
             using (var client = new SmtpClient(emailHost, port))
             {
 
@@ -416,10 +417,12 @@ namespace IdentityServer4.Quickstart.UI
         [HttpGet]
         public async Task<IActionResult> PasswordReset(string email, string token)
         {
+            Console.WriteLine(token);
+            Console.WriteLine();
             if (String.IsNullOrWhiteSpace(email)||String.IsNullOrWhiteSpace(token)) return Unauthorized("Email or token not provided Email:" + email??"not provided"+"Token:"+token??"not provided");
-            IdentityExpressUser identityExpressUser = await _userManager.FindByEmailAsync(email);
+            IdentityExpressUser identityExpressUser = await _userManager.FindByEmailAsync(HttpUtility.UrlDecode(email));
             
-            bool verified = await _userManager.VerifyUserTokenAsync(identityExpressUser, TokenOptions.DefaultEmailProvider, "ResetPassword", token);
+            bool verified = await _userManager.VerifyUserTokenAsync(identityExpressUser, TokenOptions.DefaultEmailProvider, "ResetPassword", HttpUtility.UrlDecode(token));
 
             if (verified)
             {

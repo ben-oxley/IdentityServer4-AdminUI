@@ -5,3 +5,7 @@ This package uses the Admin UI ASP.NET Identity schema found on nuget:
 `Install-Package IdentityExpress.Identity`
 
 For AdminUI documentation see [identityserver.com](https://www.identityserver.com/documentation/)
+
+Default credentials:
+info@rocksolidknowledge.com
+Password123! 
